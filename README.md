@@ -1,3 +1,9 @@
 # swifty-compagnon
 
-![plot](./userflow.png)
+## Userflow
+
+![userflow](./userflow.png)
+
+## Design
+
+![design](./design.png)
