@@ -1,3 +1,3 @@
 # swifty-compagnon
 
-![plot](./userflow.png.png)
+![plot](./userflow.png)
