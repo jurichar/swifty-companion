@@ -1,4 +1,4 @@
-# swifty-compagnon
+# swifty-companion
 
 ## Description
 
