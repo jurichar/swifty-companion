@@ -9,7 +9,22 @@ import SwiftUI
 
 struct DetailedView: View {
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack(spacing: 100) {
+            VStack {
+                Text("Swifty Companion")
+                    .font(.system(.largeTitle, design: .monospaced))
+                    .frame(maxWidth: .infinity)
+                    .clipped()
+            }
+            VStack(spacing: 30) {
+                Text("Login with 42")
+                    .font(.system(.title, design: .monospaced))
+                Circle()
+                    .frame(width: 100)
+                    .clipped()
+            }
+        }
+        .padding(0)
     }
 }
 
