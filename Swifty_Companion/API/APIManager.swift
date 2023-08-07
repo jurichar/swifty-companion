@@ -7,65 +7,73 @@
 
 import Foundation
 
-import Combine
 class APIManager {
-    private var cancellables = Set<AnyCancellable>()
-    private var accessToken: String?
-
-    func requestAccessToken(completion: @escaping (Bool) -> Void) {
-        let url = "\(APIConstants.baseURL)/oauth/token"
-        var request = URLRequest(url: URL(string: url)!)
+    
+    static let shared = APIManager()
+        var currentToken : String?
+    
+    func fetchToken() {
+        // Création de l'URL avec les paramètres de requête
+        var urlComponents = URLComponents(string: "\(APIConstants.baseURL)/oauth/token")!
+        urlComponents.queryItems = [
+            URLQueryItem(name: "grant_type", value: "client_credentials"),
+            URLQueryItem(name: "client_id", value: APIConstants.UID),
+            URLQueryItem(name: "client_secret", value: APIConstants.secret)
+        ]
+        
+        let url = urlComponents.url!
+        var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        let body = "grant_type=client_credentials&client_id=\(APIConstants.clientUID)&client_secret=\(APIConstants.clientSecret)"
-        request.httpBody = body.data(using: .utf8)
         
-        URLSession.shared.dataTaskPublisher(for: request)
-            .map(\.data)
-            .decode(type: TokenResponse.self, decoder: JSONDecoder())
-            .sink(receiveCompletion: { _ in },
-                  receiveValue: { [weak self] response in
-                    self?.accessToken = response.accessToken
-                    completion(true)
-                  })
-            .store(in: &cancellables)
+        URLSession.shared.dataTask(with: request) { (data, _, _) in
+            guard let data = data else {
+                return
+            }
+
+            do {
+                let decoder = JSONDecoder()
+                decoder.keyDecodingStrategy = .convertFromSnakeCase // Pour gérer le format en snake_case du JSON
+                let apiToken = try decoder.decode(APIToken.self, from: data)
+                self.currentToken = apiToken.accessToken
+                print(apiToken.accessToken)
+            } catch {
+                print("Failed to decode APIToken: \(error)")
+            }
+        }.resume()
     }
-}
-
-struct TokenResponse: Codable {
-    let accessToken: String
-    let tokenType: String
-    let expiresIn: Int
-    let scope: String
-    let createdAt: Int
-
-    enum CodingKeys: String, CodingKey {
-        case accessToken = "access_token"
-        case tokenType = "token_type"
-        case expiresIn = "expires_in"
-        case scope
-        case createdAt = "created_at"
-    }
-}
-
-extension APIManager {
-    func fetchCursus() -> AnyPublisher<[Cursus], Error> {
-        guard let token = accessToken else {
-            return Fail(error: APIError.invalidToken).eraseToAnyPublisher()
+    
+    func fetchUserInfo(completion: @escaping (Result<User, Error>) -> Void) {
+        guard let token = currentToken else {
+            print("error in fetchUserInfo")
+            completion(.failure(NSError(domain: "com.Swift_Companion", code: -2, userInfo: ["message": "Token not found"])))
+            return
         }
-        
-        let url = "\(APIConstants.baseURL)/v2/cursus"
-        var request = URLRequest(url: URL(string: url)!)
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        
-        return URLSession.shared.dataTaskPublisher(for: request)
-            .map(\.data)
-            .decode(type: [Cursus].self, decoder: JSONDecoder())
-            .eraseToAnyPublisher()
+
+        let url = URL(string: "\(APIConstants.baseURL)/v2/users/jurichar")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        URLSession.shared.dataTask(with: request) { (data, response, error) in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+
+            guard let data = data else {
+                completion(.failure(NSError(domain: "com.Swift_Companion", code: -3, userInfo: nil)))
+                return
+            }
+
+            do {
+                let user = try JSONDecoder().decode(User.self, from: data)
+                completion(.success(user))
+            } catch let jsonError {
+                completion(.failure(jsonError))
+            }
+
+        }.resume()
     }
 }
-
-enum APIError: Error {
-    case invalidToken
-}
-
-

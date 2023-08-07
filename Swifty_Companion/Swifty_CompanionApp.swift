@@ -10,12 +10,13 @@ import Combine
 
 @main
 struct Swifty_CompanionApp: App {
-    let persistenceController = PersistenceController.shared
+    init() {
+        APIManager.shared.fetchToken()
+    }
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environment(\.managedObjectContext, persistenceController.container.viewContext)
+            DetailedView()
         }
     }
 }

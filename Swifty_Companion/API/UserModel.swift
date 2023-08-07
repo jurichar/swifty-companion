@@ -1,0 +1,54 @@
+//
+//  UserModel.swift
+//  Swifty_Companion
+//
+//  Created by Julien Richard on 06/08/2023.
+//
+
+import Foundation
+struct User: Decodable {
+    let id: Int
+    let email: String
+    let login: String
+    let displayname: String
+    let phone: String
+    let correction_point: Int
+    let location: String?
+    let wallet: Int
+    let image: Image
+    let cursus_users: [Cursus_users]
+    let campus: [Campus]
+    let projects_users: [Projects]
+    
+    struct Projects: Decodable {
+        let project: Project
+        let status: String
+        
+        struct Project: Decodable {
+            let name: String
+        }
+    }
+    
+    struct Image: Decodable {
+        let versions: Versions
+        
+        struct Versions: Decodable {
+            let small: String
+        }
+    }
+    
+    struct Cursus_users: Decodable {
+        let level: Double
+        let skills: [Skills]
+        
+        struct Skills: Decodable {
+            let name: String
+            let level: Double
+        }
+    }
+    
+    struct Campus: Decodable {
+        let name: String
+        let country: String
+    }
+}
