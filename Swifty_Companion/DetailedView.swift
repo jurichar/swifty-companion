@@ -11,7 +11,23 @@ struct DetailedView: View {
     @State private var user: User?
     @State private var isError: Bool = false
     @State private var uiImage: UIImage? = nil
+    @State private var searchText: String = ""
+    @State private var searchResults: [Users] = []
 
+    init(user: User? = nil) {
+        _user = State(initialValue: user)
+    }
+
+    var searchTextBinding: Binding<String> {
+        Binding<String>(
+            get: { self.searchText },
+            set: {
+                self.searchText = $0
+                self.performSearch()
+            }
+        )
+    }
+    
     let formatter: NumberFormatter = {
         let f = NumberFormatter()
         f.minimumFractionDigits = 2
@@ -22,20 +38,31 @@ struct DetailedView: View {
     var body: some View {
         VStack {
             Group {
-                Image(systemName: "gobackward")
-                    .symbolRenderingMode(.monochrome)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    .clipped()
-                    .font(.title2)
-                Text("search")
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .clipped()
-                    .font(.system(.headline, design: .monospaced))
-                
-                Rectangle()
-                    .frame(height: 1)
-                    .clipped()
-                
+//                Button(action: {
+//                    print ("reload")
+//                }) {
+//                    Image(systemName: "gobackward")
+//                        .symbolRenderingMode(.monochrome)
+//                        .frame(maxWidth: .infinity, alignment: .trailing)
+//                        .clipped()
+//                        .font(.title2)
+//                }
+                TextField("Search", text: searchTextBinding)
+                    .background(Color.gray.opacity(0.2))
+                    .cornerRadius(8)
+                if !searchText.isEmpty {
+                    ScrollView() {
+                        VStack {
+                            ForEach(searchResults, id: \.login) { user in
+                                NavigationLink(destination: DetailedView()) {
+                                    Text(user.login)
+                                        .frame(maxWidth: .infinity)
+                                        .clipped()
+                                }
+                            }
+                        }
+                    }
+                }
                 Text("\(user?.displayname ?? "Loading...")")
                     .font(.system(.title, design: .monospaced))
                 HStack {
@@ -126,6 +153,25 @@ struct DetailedView: View {
                 DispatchQueue.main.async {
                     self.isError = true
                     print("Error fetching user info: \(error)")
+                }
+            }
+        }
+    }
+    
+    func performSearch() {
+        if searchText.isEmpty || searchText.count < 3 {
+            searchResults = []
+            return
+        }
+        APIManager.shared.fetchUsers(prefix: searchText) { result in
+            switch result {
+            case .success(let users):
+                DispatchQueue.main.async {
+                    self.searchResults = users
+                }
+            case .failure(let error):
+                DispatchQueue.main.async {
+                    print("Error fetching users: \(error)")
                 }
             }
         }

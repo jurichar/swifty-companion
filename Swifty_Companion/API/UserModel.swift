@@ -6,6 +6,11 @@
 //
 
 import Foundation
+
+struct Users : Decodable {
+    let login: String
+}
+
 struct User: Decodable {
     let id: Int
     let email: String
@@ -52,3 +57,4 @@ struct User: Decodable {
         let country: String
     }
 }
+
