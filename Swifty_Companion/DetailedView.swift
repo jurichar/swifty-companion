@@ -8,15 +8,13 @@
 import SwiftUI
 
 struct DetailedView: View {
+    var login: String
+    var canSearch: Bool = true
     @State private var user: User?
     @State private var isError: Bool = false
     @State private var uiImage: UIImage? = nil
     @State private var searchText: String = ""
     @State private var searchResults: [Users] = []
-
-    init(user: User? = nil) {
-        _user = State(initialValue: user)
-    }
 
     var searchTextBinding: Binding<String> {
         Binding<String>(
@@ -36,28 +34,44 @@ struct DetailedView: View {
     }()
     
     var body: some View {
+        NavigationView {
         VStack {
             Group {
-//                Button(action: {
-//                    print ("reload")
-//                }) {
-//                    Image(systemName: "gobackward")
-//                        .symbolRenderingMode(.monochrome)
-//                        .frame(maxWidth: .infinity, alignment: .trailing)
-//                        .clipped()
-//                        .font(.title2)
-//                }
+                Button(action: {
+                    print ("reload")
+                }) {
+                    Image(systemName: "gobackward")
+                        .symbolRenderingMode(.monochrome)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .clipped()
+                        .font(.title2)
+                        .padding()
+                        .padding(.horizontal, 10)
+                }
+            }
+            Group {
+                if canSearch {
                 TextField("Search", text: searchTextBinding)
                     .background(Color.gray.opacity(0.2))
                     .cornerRadius(8)
+                    .padding()
+                    .padding(.horizontal)
+                }
                 if !searchText.isEmpty {
                     ScrollView() {
                         VStack {
                             ForEach(searchResults, id: \.login) { user in
-                                NavigationLink(destination: DetailedView()) {
-                                    Text(user.login)
-                                        .frame(maxWidth: .infinity)
-                                        .clipped()
+                                HStack {
+                                    NavigationLink(destination: DetailedView(login: user.login, canSearch: false)) {
+                                        HStack {
+                                            Text(user.login)
+                                                .frame(maxWidth: .infinity)
+                                                .clipped()
+                                                .font(.system(.title2, design: .monospaced))
+                                                .foregroundColor(.black)
+                                        }
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
                                 }
                             }
                         }
@@ -128,21 +142,23 @@ struct DetailedView: View {
                             VStack {
                                 ForEach(0..<10) { index in
                                     Text("\(user?.cursus_users.last?.skills[index].name ?? "name") - \(user?.cursus_users.last?.skills[index].level ?? 0)")
-                                    .frame(maxWidth: .infinity)
-                                    .clipped()
+                                        .frame(maxWidth: .infinity)
+                                        .clipped()
                                 }
                             }
                         }
+                        .padding(.bottom, 5)
                     }
             }
         }
+    }
         .onAppear {
-            loadUserInfo()
+            loadUserInfo(login: login)
         }
     }
     
-    func loadUserInfo() {
-        APIManager.shared.fetchUserInfo() { (result) in
+    func loadUserInfo(login: String) {
+        APIManager.shared.fetchUserInfo(for: login) { (result) in
             print (result)
             switch result {
             case .success(let fetchedUser):
@@ -178,8 +194,8 @@ struct DetailedView: View {
     }
 }
 
-//struct DetailedView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        DetailedView()
-//    }
-//}
+struct DetailedView_Previews: PreviewProvider {
+    static var previews: some View {
+        DetailedView(login: "jurichar")
+    }
+}

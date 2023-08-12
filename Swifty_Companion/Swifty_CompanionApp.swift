@@ -16,7 +16,7 @@ struct Swifty_CompanionApp: App {
 
     var body: some Scene {
         WindowGroup {
-            DetailedView()
+            DetailedView(login: "jurichar")
         }
     }
 }

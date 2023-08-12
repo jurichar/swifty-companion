@@ -42,14 +42,14 @@ class APIManager {
         }.resume()
     }
     
-    func fetchUserInfo(completion: @escaping (Result<User, Error>) -> Void) {
+    func fetchUserInfo(for login: String, completion: @escaping (Result<User, Error>) -> Void) {
         guard let token = currentToken else {
             print("error in fetchUserInfo")
             completion(.failure(NSError(domain: "com.Swift_Companion", code: -2, userInfo: ["message": "Token not found"])))
             return
         }
         
-        let url = URL(string: "\(APIConstants.baseURL)/v2/users/jurichar")!
+        let url = URL(string: "\(APIConstants.baseURL)/v2/users/\(login)")!
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -78,15 +78,10 @@ class APIManager {
     }
     
     func generateRangeValue(for prefix: String) -> String {
-        // Convertir le dernier caractère en Unicode scalar pour pouvoir l'incrémenter
         guard let lastChar = prefix.last, let scalar = UnicodeScalar(String(lastChar)) else {
             return "\(prefix),z\(prefix)"
         }
-        
-        // Incrémenter le dernier caractère
         let incrementedChar = Character(UnicodeScalar(scalar.value + 1)!)
-        
-        // Construire la nouvelle chaîne
         let newString = prefix.dropLast() + String(incrementedChar)
         
         return "\(prefix),\(newString)"
