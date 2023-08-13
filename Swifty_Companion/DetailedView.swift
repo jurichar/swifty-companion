@@ -20,7 +20,7 @@ struct DetailedView: View {
     @State private var coalitionColor: Color = .primary
     @State private var isFavorite: Bool = false
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
-
+    
     var searchTextBinding: Binding<String> {
         Binding<String>(
             get: { self.searchText },
@@ -44,17 +44,17 @@ struct DetailedView: View {
                 HStack {
                     if self.presentationMode.wrappedValue.isPresented {
                         Button(action: {
-                             self.presentationMode.wrappedValue.dismiss()
-                         }) {
-                             Image(systemName: "arrow.left")
-                                 .symbolRenderingMode(.monochrome)
-                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                 .foregroundColor(.black)
-                                 .clipped()
-                                 .font(.title)
-                                 .padding(.horizontal, 10)
-                         }
-                         .buttonStyle(PlainButtonStyle())
+                            self.presentationMode.wrappedValue.dismiss()
+                        }) {
+                            Image(systemName: "arrow.left")
+                                .symbolRenderingMode(.monochrome)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .foregroundColor(.black)
+                                .clipped()
+                                .font(.title)
+                                .padding(.horizontal, 10)
+                        }
+                        .buttonStyle(PlainButtonStyle())
                     }
                     if canSearch {
                         favoriteButton()
@@ -66,13 +66,18 @@ struct DetailedView: View {
                 ZStack {
                     VStack {
                         searchField()
-                       userInfo()
-                       userProjects()
-                       userSkills()
-                   }
-                   resultsSearch()
+                        ScrollView {
+                            VStack (spacing: 30) {
+                                userInfo()
+                                userProjects()
+//                                userSkills()
+                                usersSkills()
+                            }
+                        }
+                    }
+                    resultsSearch()
                     Spacer()
-               }
+                }
             }
         }
         .onAppear {
@@ -81,6 +86,7 @@ struct DetailedView: View {
             checkIfUserIsFavorite(login: login)
         }
         .navigationBarBackButtonHidden(true)
+        .padding(.horizontal, 10)
     }
     
     func loadImage(from url: URL) {
@@ -97,7 +103,7 @@ struct DetailedView: View {
         let context = PersistenceController.shared.container.viewContext
         let fetchRequest: NSFetchRequest<FavoriteUser> = FavoriteUser.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "login == %@", login)
-
+        
         do {
             let existingUsers = try context.fetch(fetchRequest)
             isFavorite = !existingUsers.isEmpty
@@ -105,7 +111,7 @@ struct DetailedView: View {
             print("Error checking if user is favorite: \(error)")
         }
     }
-
+    
     func favoriteButton() -> some View {
         NavigationLink(destination: FavoritesView()) {
             Image(systemName: "star")
@@ -142,7 +148,7 @@ struct DetailedView: View {
         let context = PersistenceController.shared.container.viewContext
         let fetchRequest: NSFetchRequest<FavoriteUser> = FavoriteUser.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "login == %@", login)
-
+        
         do {
             let existingUsers = try context.fetch(fetchRequest)
             if existingUsers.isEmpty {
@@ -161,7 +167,7 @@ struct DetailedView: View {
         let context = PersistenceController.shared.container.viewContext
         let fetchRequest: NSFetchRequest<FavoriteUser> = FavoriteUser.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "login == %@", login)
-
+        
         do {
             let users = try context.fetch(fetchRequest)
             for user in users {
@@ -175,7 +181,7 @@ struct DetailedView: View {
     
     func reloadButton() -> some View {
         Button(action: {
-//            print("reload")
+            //            print("reload")
             loadUserInfo(login: login)
             loadCoalitionColor(login: login)
         }) {
@@ -200,8 +206,10 @@ struct DetailedView: View {
                     .cornerRadius(8)
                     .clipped()
                     .font(.system(.title2, design: .monospaced))
+                    .shadow(color: Color.black.opacity(0.2), radius: 15, x: 0, y: 2)
             }
         }
+        .padding(.vertical, 20)
         .padding(.horizontal, 10)
     }
     
@@ -251,10 +259,10 @@ struct DetailedView: View {
     }
     
     func userInfo() -> some View {
-        VStack {
+        VStack (spacing: 10){
             Text("\(user?.displayname ?? "???")")
-                .font(.system(.title3, design: .monospaced))
-               userCircles()
+                .font(.system(.title2, design: .monospaced))
+            userCircles()
             Text("aka \(user?.login ?? "???") (\(user?.cursus_users.last?.grade ?? "???"))")
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .clipped()
@@ -279,12 +287,9 @@ struct DetailedView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .clipped()
         .padding()
-        .background {
-            RoundedRectangle(cornerRadius: 15, style: .continuous)
-                .stroke(Color(.quaternaryLabel), lineWidth: 2)
-                .background(RoundedRectangle(cornerRadius: 40, style: .continuous).fill(Color(.systemBackground)))
-        }
+        .background(RoundedRectangle(cornerRadius: 40, style: .continuous).fill(Color(.systemBackground)))
         .padding(.horizontal, 10)
+        .shadow(color: Color.black.opacity(0.2), radius: 15, x: 0, y: 2)
     }
     
     func statusIcon(for project: User.Projects?) -> some View {
@@ -313,11 +318,11 @@ struct DetailedView: View {
                 .foregroundColor(.gray)
         }
     }
-
+    
     func userProjects() -> some View {
         VStack {
             Text("Projects")
-                .font(.system(.headline, design: .monospaced))
+                .font(.system(.title3, design: .monospaced))
             ScrollView {
                 VStack {
                     ForEach(0..<(user?.projects_users.count ?? 0), id: \.self) { index in
@@ -326,7 +331,7 @@ struct DetailedView: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .font(.system(.body, design: .monospaced))
                             statusIcon(for: user?.projects_users[index])
-                            }
+                        }
                         .clipped()
                         Divider()
                     }
@@ -335,53 +340,52 @@ struct DetailedView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .clipped()
             .padding()
-            .background {
-                RoundedRectangle(cornerRadius: 15, style: .continuous)
-                    .stroke(Color(.quaternaryLabel), lineWidth: 2)
-                    .background(RoundedRectangle(cornerRadius: 40, style: .continuous).fill(Color(.systemBackground)))
-            }
+            .background(RoundedRectangle(cornerRadius: 40, style: .continuous).fill(Color(.systemBackground)))
         }
-        .frame(height: UIScreen.main.bounds.width / 2 + 20)
+        .frame(height: UIScreen.main.bounds.width / 2 + 40)
         .padding(.horizontal, 10)
+        .shadow(color: Color.black.opacity(0.2), radius: 15, x: 0, y: 2)
     }
     
-    func userSkills() -> some View {
-        VStack {
-            Text("Skills")
-                .font(.system(.headline, design: .monospaced))
-            ScrollView {
-                VStack {
-                    if (user?.cursus_users.last?.skills.isEmpty ?? true) {
-                        Text("No skills")
-                            .foregroundColor(.secondary)
-                            .font(.system(.headline, design: .monospaced))
-                    } else {
-                        ForEach(0..<(user?.cursus_users.last?.skills.count ?? 0), id: \.self) { index in
-                            HStack {
-                                Text(user?.cursus_users.last?.skills[index].name ?? "")
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .font(.system(.body, design: .monospaced))
-                                Text("\(formatter.string(from: NSNumber(value: user?.cursus_users.last?.skills[index].level ?? 0)) ?? "???")")
-                                    .frame(width: 50, alignment: .trailing)
-                                    .font(.system(.body, design: .monospaced))
-                            }
-                            .clipped()
-                            Divider()
-                        }
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .clipped()
-            .padding()
-            .background {
-                RoundedRectangle(cornerRadius: 15, style: .continuous)
-                    .stroke(Color(.quaternaryLabel), lineWidth: 2)
-                    .background(RoundedRectangle(cornerRadius: 40, style: .continuous).fill(Color(.systemBackground)))
-            }
-        }
-        .padding(.horizontal, 10)
-    }
+//    func userSkills() -> some View {
+//        VStack {
+//            Text("Skills")
+//                .font(.system(.title3, design: .monospaced))
+//            ScrollView {
+//                VStack {
+//                    if (user?.cursus_users.last?.skills.isEmpty ?? true) {
+//                        Text("No skills")
+//                            .foregroundColor(.secondary)
+//                            .font(.system(.headline, design: .monospaced))
+//                    } else {
+//                        ForEach(0..<(user?.cursus_users.last?.skills.count ?? 0), id: \.self) { index in
+//                            HStack {
+//                                Text(user?.cursus_users.last?.skills[index].name ?? "")
+//                                    .frame(maxWidth: .infinity, alignment: .leading)
+//                                    .font(.system(.body, design: .monospaced))
+//                                Text("\(formatter.string(from: NSNumber(value: user?.cursus_users.last?.skills[index].level ?? 0)) ?? "???")")
+//                                    .frame(width: 100, alignment: .trailing)
+//                                    .font(.system(.body, design: .monospaced))
+//                            }
+//                            .clipped()
+//                            Divider()
+//                        }
+//                    }
+//                }
+//            }
+//            .frame(maxWidth: .infinity, alignment: .leading)
+//            .clipped()
+//            .padding()
+//            .background {
+//                RoundedRectangle(cornerRadius: 15, style: .continuous)
+//                    .stroke(Color(.quaternaryLabel), lineWidth: 2)
+//                    .background(RoundedRectangle(cornerRadius: 40, style: .continuous).fill(Color(.systemBackground)))
+//            }
+//        }
+//        .frame(height: UIScreen.main.bounds.width / 2 + 40)
+//        .padding(.horizontal, 10)
+//        .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 2)
+//    }
     
     func loadUserInfo(login: String) {
         APIManager.shared.fetchUserInfo(for: login) { (result) in
@@ -431,6 +435,20 @@ struct DetailedView: View {
                 print("Error fetching coalition color: \(error)")
             }
         }
+    }
+    
+    func usersSkills() -> some View {
+        let skillsData = user?.cursus_users.last?.skills.map { Skill(name: $0.name, level: $0.level) } ?? []
+        return VStack {
+            Text("Skills")
+                .font(.system(.title3, design: .monospaced))
+                    RadarView(skills: skillsData)
+                        .frame(height: UIScreen.main.bounds.width)
+                        .padding()
+                        .background(RoundedRectangle(cornerRadius: 40, style: .continuous).fill(Color(.systemBackground)))
+                        .shadow(color: Color.black.opacity(0.2), radius: 15, x: 0, y: 2)
+        }
+        .padding(.horizontal, 10)
     }
 }
 
