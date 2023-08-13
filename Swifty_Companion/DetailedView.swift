@@ -6,16 +6,20 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct DetailedView: View {
     var login: String
     var canSearch: Bool = true
+    var fromFav: Bool = false
     @State private var user: User?
     @State private var isError: Bool = false
     @State private var searchText: String = ""
     @State private var searchResults: [Users] = []
     @State private var loadedImage: UIImage?
     @State private var coalitionColor: Color = .primary
+    @State private var isFavorite: Bool = false
+    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
 
     var searchTextBinding: Binding<String> {
         Binding<String>(
@@ -37,7 +41,28 @@ struct DetailedView: View {
     var body: some View {
         NavigationView {
             VStack {
-                reloadButton()
+                HStack {
+                    if self.presentationMode.wrappedValue.isPresented {
+                        Button(action: {
+                             self.presentationMode.wrappedValue.dismiss()
+                         }) {
+                             Image(systemName: "arrow.left")
+                                 .symbolRenderingMode(.monochrome)
+                                 .frame(maxWidth: .infinity, alignment: .leading)
+                                 .foregroundColor(.black)
+                                 .clipped()
+                                 .font(.title)
+                                 .padding(.horizontal, 10)
+                         }
+                         .buttonStyle(PlainButtonStyle())
+                    }
+                    if canSearch {
+                        favoriteButton()
+                        reloadButton()
+                    } else {
+                        favoriteToggleButton()
+                    }
+                }
                 ZStack {
                     VStack {
                         searchField()
@@ -53,7 +78,9 @@ struct DetailedView: View {
         .onAppear {
             loadUserInfo(login: login)
             loadCoalitionColor(login: login)
+            checkIfUserIsFavorite(login: login)
         }
+        .navigationBarBackButtonHidden(true)
     }
     
     func loadImage(from url: URL) {
@@ -64,6 +91,86 @@ struct DetailedView: View {
                 }
             }
         }.resume()
+    }
+    
+    func checkIfUserIsFavorite(login: String) {
+        let context = PersistenceController.shared.container.viewContext
+        let fetchRequest: NSFetchRequest<FavoriteUser> = FavoriteUser.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "login == %@", login)
+
+        do {
+            let existingUsers = try context.fetch(fetchRequest)
+            isFavorite = !existingUsers.isEmpty
+        } catch {
+            print("Error checking if user is favorite: \(error)")
+        }
+    }
+
+    func favoriteButton() -> some View {
+        NavigationLink(destination: FavoritesView()) {
+            Image(systemName: "star")
+                .symbolRenderingMode(.monochrome)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .foregroundColor(.black)
+                .clipped()
+                .font(.title)
+                .padding(.horizontal, 10)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+    
+    func favoriteToggleButton() -> some View {
+        Button(action: {
+            if isFavorite {
+                removeUserFromFavorites(login: login)
+            } else {
+                addUserToFavorites(login: login)
+            }
+            isFavorite.toggle()
+        }) {
+            Image(systemName: isFavorite ? "star.fill" : "star")
+                .symbolRenderingMode(.monochrome)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .foregroundColor(.yellow)
+                .clipped()
+                .font(.title)
+                .padding(.horizontal, 10)
+        }
+    }
+    
+    func addUserToFavorites(login: String) {
+        let context = PersistenceController.shared.container.viewContext
+        let fetchRequest: NSFetchRequest<FavoriteUser> = FavoriteUser.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "login == %@", login)
+
+        do {
+            let existingUsers = try context.fetch(fetchRequest)
+            if existingUsers.isEmpty {
+                let newUser = FavoriteUser(context: context)
+                newUser.login = login
+                try context.save()
+            } else {
+                print("User already exists in favorites.")
+            }
+        } catch {
+            print("Error saving user to favorites: \(error)")
+        }
+    }
+    
+    func removeUserFromFavorites(login: String) {
+        let context = PersistenceController.shared.container.viewContext
+        let fetchRequest: NSFetchRequest<FavoriteUser> = FavoriteUser.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "login == %@", login)
+
+        do {
+            let users = try context.fetch(fetchRequest)
+            for user in users {
+                context.delete(user)
+            }
+            try context.save()
+        } catch {
+            print("Error removing user from favorites: \(error)")
+        }
     }
     
     func reloadButton() -> some View {
@@ -77,7 +184,7 @@ struct DetailedView: View {
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 .foregroundColor(.black)
                 .clipped()
-                .font(.title2)
+                .font(.title)
                 .padding(.horizontal, 10)
         }
         .buttonStyle(PlainButtonStyle())
@@ -87,7 +194,8 @@ struct DetailedView: View {
         VStack {
             if canSearch {
                 TextField("Search", text: searchTextBinding)
-                    .padding()
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
                     .background(Color.gray.opacity(0.2))
                     .cornerRadius(8)
                     .clipped()
@@ -233,6 +341,7 @@ struct DetailedView: View {
                     .background(RoundedRectangle(cornerRadius: 40, style: .continuous).fill(Color(.systemBackground)))
             }
         }
+        .frame(height: UIScreen.main.bounds.width / 2 + 20)
         .padding(.horizontal, 10)
     }
     
