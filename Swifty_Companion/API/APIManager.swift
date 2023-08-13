@@ -35,7 +35,6 @@ class APIManager {
                 decoder.keyDecodingStrategy = .convertFromSnakeCase // Pour gérer le format en snake_case du JSON
                 let apiToken = try decoder.decode(APIToken.self, from: data)
                 self.currentToken = apiToken.accessToken
-                print(apiToken.accessToken)
             } catch {
                 print("Failed to decode APIToken: \(error)")
             }
@@ -59,6 +58,7 @@ class APIManager {
         URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
                 completion(.failure(error))
+                self.fetchToken()
                 return
             }
             
@@ -126,6 +126,42 @@ class APIManager {
                 completion(.failure(jsonError))
             }
             
+        }.resume()
+    }
+    
+    func fetchCoalitionColor(for login: String, completion: @escaping (Result<String, Error>) -> Void) {
+        guard let token = currentToken else {
+            completion(.failure(NSError(domain: "com.Swift_Companion", code: -2, userInfo: ["message": "Token not found"])))
+            return
+        }
+        
+        let url = URL(string: "\(APIConstants.baseURL)/v2/users/\(login)/coalitions")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        URLSession.shared.dataTask(with: request) { (data, _, error) in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let data = data else {
+                completion(.failure(NSError(domain: "com.Swift_Companion", code: -3, userInfo: nil)))
+                return
+            }
+            
+            do {
+                let coalitions = try JSONDecoder().decode([Coalition].self, from: data)
+                if let color = coalitions.first?.color {
+                    completion(.success(color))
+                } else {
+                    completion(.failure(NSError(domain: "com.Swift_Companion", code: -4, userInfo: ["message": "Color not found"])))
+                }
+            } catch let jsonError {
+                completion(.failure(jsonError))
+            }
         }.resume()
     }
 }

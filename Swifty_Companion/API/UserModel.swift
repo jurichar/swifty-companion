@@ -11,6 +11,10 @@ struct Users : Decodable {
     let login: String
 }
 
+struct Coalition: Decodable {
+    let color: String
+}
+
 struct User: Decodable {
     let id: Int
     let email: String
@@ -27,8 +31,13 @@ struct User: Decodable {
     
     struct Projects: Decodable {
         let project: Project
-        let status: String
+        let status: String // searching_a_group, finished, in_progress.
+        let validated: Bool?
         
+        enum CodingKeys: String, CodingKey {
+            case project, status
+            case validated = "validated?"
+        }
         struct Project: Decodable {
             let name: String
         }
@@ -44,6 +53,7 @@ struct User: Decodable {
     
     struct Cursus_users: Decodable {
         let level: Double
+        let grade: String?
         let skills: [Skills]
         
         struct Skills: Decodable {
