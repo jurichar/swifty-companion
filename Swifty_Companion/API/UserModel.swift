@@ -54,6 +54,7 @@ struct User: Decodable {
     struct Cursus_users: Decodable {
         let level: Double
         let grade: String?
+        let cursus_id: Int
         let skills: [Skills]
         
         struct Skills: Decodable {

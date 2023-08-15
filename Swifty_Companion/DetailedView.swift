@@ -12,6 +12,17 @@ struct DetailedView: View {
     var login: String
     var canSearch: Bool = true
     var fromFav: Bool = false
+    var correctCursus: User.Cursus_users? {
+        if let cursusUsers = user?.cursus_users {
+            for cursus in cursusUsers {
+                if cursus.cursus_id == 21 {
+                    return cursus
+                }
+            }
+        }
+        return user?.cursus_users.last
+    }
+    
     @State private var user: User?
     @State private var isError: Bool = false
     @State private var searchText: String = ""
@@ -251,9 +262,9 @@ struct DetailedView: View {
                     .background(Circle().fill(coalitionColor.opacity(0.3)))
                     .frame(width: UIScreen.main.bounds.width / 3 - 10, height: UIScreen.main.bounds.width / 3 - 10)
                     .overlay {
-                        Text(formatter.string(from: NSNumber(value: user?.cursus_users.last?.level ?? 0)) ?? "XX")
+                        Text(formatter.string(from: NSNumber(value: correctCursus?.level ?? 0)) ?? "XX")
                             .font(.system(.title, design: .monospaced))
-                            .redacted(reason: user?.cursus_users.last?.level == nil ? .placeholder : [])
+                            .redacted(reason: correctCursus?.level == nil ? .placeholder : [])
                     }
             }
             Circle()
@@ -261,9 +272,9 @@ struct DetailedView: View {
                 .background(Circle().fill(coalitionColor.opacity(0.3)))
                 .frame(width: UIScreen.main.bounds.width / 3 - 10, height: UIScreen.main.bounds.width / 3 - 10)
                 .overlay {
-                    Text(formatter.string(from: NSNumber(value: user?.cursus_users.last?.level ?? 0)) ?? "XX")
+                    Text(formatter.string(from: NSNumber(value: correctCursus?.level ?? 0)) ?? "XX")
                         .font(.system(.title, design: .monospaced))
-                        .redacted(reason: user?.cursus_users.last?.level == nil ? .placeholder : [])
+                        .redacted(reason: correctCursus?.level == nil ? .placeholder : [])
                 }
         }
         .transition(.opacity)
@@ -277,7 +288,7 @@ struct DetailedView: View {
             Spacer()
             userCircles()
             Spacer()
-            Text("aka \(user?.login ?? "jurichar") (\(user?.cursus_users.last?.grade ?? "member"))")
+            Text("aka \(user?.login ?? "jurichar") (\(correctCursus?.grade ?? "member"))")
                 .redacted(reason: user?.login == nil ? .placeholder : [])
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .clipped()
@@ -417,7 +428,7 @@ struct DetailedView: View {
     }
     
     func userSkills() -> some View {
-        let skillsData = (user?.cursus_users.last?.skills ?? []).sorted { $0.name < $1.name }.map { Skill(name: $0.name, level: $0.level) }
+        let skillsData = (correctCursus?.skills ?? []).sorted { $0.name < $1.name }.map { Skill(name: $0.name, level: $0.level) }
         return VStack {
             Text("Skills")
                 .font(.system(.title3, design: .monospaced))
