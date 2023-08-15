@@ -45,6 +45,7 @@ class APIManager {
         guard let token = currentToken else {
             print("error in fetchUserInfo")
             completion(.failure(NSError(domain: "com.Swift_Companion", code: -2, userInfo: ["message": "Token not found"])))
+            fetchToken()
             return
         }
         
@@ -91,6 +92,7 @@ class APIManager {
         guard let token = currentToken else {
             print("error in fetchUsersStartingWith")
             completion(.failure(NSError(domain: "com.Swift_Companion", code: -2, userInfo: ["message": "Token not found"])))
+            fetchToken()
             return
         }
         
@@ -132,6 +134,7 @@ class APIManager {
     func fetchCoalitionColor(for login: String, completion: @escaping (Result<String, Error>) -> Void) {
         guard let token = currentToken else {
             completion(.failure(NSError(domain: "com.Swift_Companion", code: -2, userInfo: ["message": "Token not found"])))
+            fetchToken()
             return
         }
         

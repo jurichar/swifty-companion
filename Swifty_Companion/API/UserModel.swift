@@ -47,7 +47,7 @@ struct User: Decodable {
         let versions: Versions
         
         struct Versions: Decodable {
-            let small: String
+            let large: String
         }
     }
     

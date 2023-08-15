@@ -19,6 +19,7 @@ struct DetailedView: View {
     @State private var loadedImage: UIImage?
     @State private var coalitionColor: Color = .primary
     @State private var isFavorite: Bool = false
+    @State private var isImageViewPresented: Bool = false
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     
     var searchTextBinding: Binding<String> {
@@ -49,36 +50,43 @@ struct DetailedView: View {
                             Image(systemName: "arrow.left")
                                 .symbolRenderingMode(.monochrome)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .foregroundColor(.black)
+                                .foregroundColor(.primary)
                                 .clipped()
-                                .font(.title)
+                                .font(.title3)
                                 .padding(.horizontal, 10)
                         }
                         .buttonStyle(PlainButtonStyle())
                     }
                     if canSearch {
                         favoriteButton()
-                        reloadButton()
                     } else {
                         favoriteToggleButton()
                     }
                 }
+                .padding(.horizontal, 10)
                 ZStack {
                     VStack {
-                        searchField()
+                        if canSearch {
+                            searchField()
+                        }
                         ScrollView {
                             VStack (spacing: 30) {
                                 userInfo()
                                 userProjects()
-//                                userSkills()
-                                usersSkills()
+                                userSkills()
                             }
+                            .padding(.top, 30)
+                        }.refreshable {
+                            loadUserInfo(login: login)
+                            loadCoalitionColor(login: login)
+                            checkIfUserIsFavorite(login: login)
                         }
                     }
                     resultsSearch()
                     Spacer()
                 }
             }
+            .background(Color.init(uiColor: UIColor.secondarySystemBackground))
         }
         .onAppear {
             loadUserInfo(login: login)
@@ -86,7 +94,6 @@ struct DetailedView: View {
             checkIfUserIsFavorite(login: login)
         }
         .navigationBarBackButtonHidden(true)
-        .padding(.horizontal, 10)
     }
     
     func loadImage(from url: URL) {
@@ -116,11 +123,12 @@ struct DetailedView: View {
         NavigationLink(destination: FavoritesView()) {
             Image(systemName: "star")
                 .symbolRenderingMode(.monochrome)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .foregroundColor(.black)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .foregroundColor(.secondary)
                 .clipped()
                 .font(.title)
                 .padding(.horizontal, 10)
+                .padding(.top, 10)
         }
         .buttonStyle(PlainButtonStyle())
     }
@@ -137,7 +145,7 @@ struct DetailedView: View {
             Image(systemName: isFavorite ? "star.fill" : "star")
                 .symbolRenderingMode(.monochrome)
                 .frame(maxWidth: .infinity, alignment: .trailing)
-                .foregroundColor(.yellow)
+                .foregroundColor(isFavorite ? .yellow : .primary)
                 .clipped()
                 .font(.title)
                 .padding(.horizontal, 10)
@@ -179,37 +187,19 @@ struct DetailedView: View {
         }
     }
     
-    func reloadButton() -> some View {
-        Button(action: {
-            //            print("reload")
-            loadUserInfo(login: login)
-            loadCoalitionColor(login: login)
-        }) {
-            Image(systemName: "gobackward")
-                .symbolRenderingMode(.monochrome)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .foregroundColor(.black)
-                .clipped()
-                .font(.title)
-                .padding(.horizontal, 10)
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-    
     func searchField() -> some View {
         VStack {
-            if canSearch {
-                TextField("Search", text: searchTextBinding)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(Color.gray.opacity(0.2))
-                    .cornerRadius(8)
-                    .clipped()
-                    .font(.system(.title2, design: .monospaced))
-                    .shadow(color: Color.black.opacity(0.2), radius: 15, x: 0, y: 2)
-            }
+            TextField("Search", text: searchTextBinding)
+                .frame(height: 40)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 5)
+                .background(Color.primary.opacity(0.1))
+                .cornerRadius(30)
+                .clipped()
+                .font(.system(.title2, design: .monospaced))
         }
-        .padding(.vertical, 20)
+        .lineSpacing(10)
+        .padding(.top, 20)
         .padding(.horizontal, 10)
     }
     
@@ -223,36 +213,57 @@ struct DetailedView: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .clipped()
                                 .font(.system(.title2, design: .monospaced))
-                                .foregroundColor(.black)
+                                .foregroundColor(.secondary)
                                 .padding(10)
                                 .background {
                                     RoundedRectangle(cornerRadius: 15, style: .continuous)
-                                        .fill(Color.white.opacity(0.8))
+                                        .fill(Color.init(uiColor: UIColor.systemBackground).opacity(0.8))
                                 }
                         }
                     }
                     .listStyle(PlainListStyle())
                 }
             }
-            .offset(y: 60)
+            .offset(y: 70)
         }
     }
     
     func userCircles() -> some View {
         HStack(spacing: 50) {
-            if URL(string: user?.image.versions.small ?? "") != nil {
+            if URL(string: user?.image.versions.large ?? "") != nil {
                 Image(uiImage: loadedImage ?? UIImage())
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: UIScreen.main.bounds.width / 3, height: UIScreen.main.bounds.width / 3 )
                     .clipShape(Circle())
+                    .onTapGesture {
+                        self.isImageViewPresented.toggle()
+                    }
+                    .sheet(isPresented: $isImageViewPresented) {
+                        Image(uiImage: loadedImage ?? UIImage())
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .edgesIgnoringSafeArea(.all)
+                    }
+            }else{
+                Circle()
+                    .stroke(coalitionColor, lineWidth: 10)
+                    .background(Circle().fill(coalitionColor.opacity(0.3)))
+                    .frame(width: UIScreen.main.bounds.width / 3 - 10, height: UIScreen.main.bounds.width / 3 - 10)
+                    .overlay {
+                        Text(formatter.string(from: NSNumber(value: user?.cursus_users.last?.level ?? 0)) ?? "XX")
+                            .font(.system(.title, design: .monospaced))
+                            .redacted(reason: user?.cursus_users.last?.level == nil ? .placeholder : [])
+                    }
             }
             Circle()
                 .stroke(coalitionColor, lineWidth: 10)
+                .background(Circle().fill(coalitionColor.opacity(0.3)))
                 .frame(width: UIScreen.main.bounds.width / 3 - 10, height: UIScreen.main.bounds.width / 3 - 10)
                 .overlay {
-                    Text("\(formatter.string(from: NSNumber(value: user?.cursus_users.last?.level ?? 0)) ?? "???")")
+                    Text(formatter.string(from: NSNumber(value: user?.cursus_users.last?.level ?? 0)) ?? "XX")
                         .font(.system(.title, design: .monospaced))
+                        .redacted(reason: user?.cursus_users.last?.level == nil ? .placeholder : [])
                 }
         }
         .transition(.opacity)
@@ -260,26 +271,34 @@ struct DetailedView: View {
     
     func userInfo() -> some View {
         VStack (spacing: 10){
-            Text("\(user?.displayname ?? "???")")
+            Text("\(user?.displayname ?? "Julien Richard")")
                 .font(.system(.title2, design: .monospaced))
+                .redacted(reason: user?.displayname == nil ? .placeholder : [])
+            Spacer()
             userCircles()
-            Text("aka \(user?.login ?? "???") (\(user?.cursus_users.last?.grade ?? "???"))")
+            Spacer()
+            Text("aka \(user?.login ?? "jurichar") (\(user?.cursus_users.last?.grade ?? "member"))")
+                .redacted(reason: user?.login == nil ? .placeholder : [])
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .clipped()
                 .font(.system(.body, design: .monospaced))
-            Text("\(user?.location ?? "???")")
+            Text("\(user?.location ?? "PaulF3B1R3")")
+                .redacted(reason: user?.location == nil ? .placeholder : [])
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .clipped()
                 .font(.system(.body, design: .monospaced))
-            Text("\(user?.campus.first?.name ?? "???"), \(user?.campus.first?.country ?? "???")")
+            Text("\(user?.campus.first?.name ?? "Paris"), \(user?.campus.first?.country ?? "France")")
+                .redacted(reason: user?.campus.first?.name == nil ? .placeholder : [])
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .clipped()
                 .font(.system(.body, design: .monospaced))
             Text("\(user?.phone ?? "?? ?? ?? ?? ??")")
+                .redacted(reason: user?.phone == nil ? .placeholder : [])
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .clipped()
                 .font(.system(.body, design: .monospaced))
             Text("\(user?.correction_point ?? 0) correction points - \(user?.wallet ?? 0) wallet ")
+                .redacted(reason: user?.displayname == nil ? .placeholder : [])
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .clipped()
                 .font(.system(.body, design: .monospaced))
@@ -287,9 +306,9 @@ struct DetailedView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .clipped()
         .padding()
-        .background(RoundedRectangle(cornerRadius: 40, style: .continuous).fill(Color(.systemBackground)))
+        .background(RoundedRectangle(cornerRadius: 30, style: .continuous).fill(Color(.systemBackground)))
         .padding(.horizontal, 10)
-        .shadow(color: Color.black.opacity(0.2), radius: 15, x: 0, y: 2)
+        .shadow(color: Color.primary.opacity(0.2), radius: 15, x: 2, y: 0)
     }
     
     func statusIcon(for project: User.Projects?) -> some View {
@@ -340,52 +359,12 @@ struct DetailedView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .clipped()
             .padding()
-            .background(RoundedRectangle(cornerRadius: 40, style: .continuous).fill(Color(.systemBackground)))
+            .background(RoundedRectangle(cornerRadius: 30, style: .continuous).fill(Color(.systemBackground)))
         }
-        .frame(height: UIScreen.main.bounds.width / 2 + 40)
+        .frame(height: UIScreen.main.bounds.width - 40)
         .padding(.horizontal, 10)
-        .shadow(color: Color.black.opacity(0.2), radius: 15, x: 0, y: 2)
+        .shadow(color: Color.primary.opacity(0.2), radius: 15, x: 0, y: 2)
     }
-    
-//    func userSkills() -> some View {
-//        VStack {
-//            Text("Skills")
-//                .font(.system(.title3, design: .monospaced))
-//            ScrollView {
-//                VStack {
-//                    if (user?.cursus_users.last?.skills.isEmpty ?? true) {
-//                        Text("No skills")
-//                            .foregroundColor(.secondary)
-//                            .font(.system(.headline, design: .monospaced))
-//                    } else {
-//                        ForEach(0..<(user?.cursus_users.last?.skills.count ?? 0), id: \.self) { index in
-//                            HStack {
-//                                Text(user?.cursus_users.last?.skills[index].name ?? "")
-//                                    .frame(maxWidth: .infinity, alignment: .leading)
-//                                    .font(.system(.body, design: .monospaced))
-//                                Text("\(formatter.string(from: NSNumber(value: user?.cursus_users.last?.skills[index].level ?? 0)) ?? "???")")
-//                                    .frame(width: 100, alignment: .trailing)
-//                                    .font(.system(.body, design: .monospaced))
-//                            }
-//                            .clipped()
-//                            Divider()
-//                        }
-//                    }
-//                }
-//            }
-//            .frame(maxWidth: .infinity, alignment: .leading)
-//            .clipped()
-//            .padding()
-//            .background {
-//                RoundedRectangle(cornerRadius: 15, style: .continuous)
-//                    .stroke(Color(.quaternaryLabel), lineWidth: 2)
-//                    .background(RoundedRectangle(cornerRadius: 40, style: .continuous).fill(Color(.systemBackground)))
-//            }
-//        }
-//        .frame(height: UIScreen.main.bounds.width / 2 + 40)
-//        .padding(.horizontal, 10)
-//        .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 2)
-//    }
     
     func loadUserInfo(login: String) {
         APIManager.shared.fetchUserInfo(for: login) { (result) in
@@ -393,7 +372,7 @@ struct DetailedView: View {
             case .success(let fetchedUser):
                 DispatchQueue.main.async {
                     self.user = fetchedUser
-                    if let imageUrl = URL(string: fetchedUser.image.versions.small) {
+                    if let imageUrl = URL(string: fetchedUser.image.versions.large) {
                         self.loadImage(from: imageUrl)
                     }
                 }
@@ -437,16 +416,16 @@ struct DetailedView: View {
         }
     }
     
-    func usersSkills() -> some View {
-        let skillsData = user?.cursus_users.last?.skills.map { Skill(name: $0.name, level: $0.level) } ?? []
+    func userSkills() -> some View {
+        let skillsData = (user?.cursus_users.last?.skills ?? []).sorted { $0.name < $1.name }.map { Skill(name: $0.name, level: $0.level) }
         return VStack {
             Text("Skills")
                 .font(.system(.title3, design: .monospaced))
-                    RadarView(skills: skillsData)
-                        .frame(height: UIScreen.main.bounds.width)
-                        .padding()
-                        .background(RoundedRectangle(cornerRadius: 40, style: .continuous).fill(Color(.systemBackground)))
-                        .shadow(color: Color.black.opacity(0.2), radius: 15, x: 0, y: 2)
+            RadarView(skills: skillsData)
+                .frame(height: UIScreen.main.bounds.width - 40)
+                .padding()
+                .background(RoundedRectangle(cornerRadius: 30, style: .continuous).fill(Color(.systemBackground)))
+                .shadow(color: Color.primary.opacity(0.2), radius: 15, x: 0, y: 2)
         }
         .padding(.horizontal, 10)
     }
