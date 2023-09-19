@@ -11,6 +11,10 @@ It also display the skills of the student and the projects he/she has done.
 - Swift
 - SwiftUI
 
+## Screenshots
+
+![screenshot](./screenshot.gif)
+
 ## Userflow
 
 ![userflow](./userflow.png)
