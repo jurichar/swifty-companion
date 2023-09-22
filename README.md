@@ -22,3 +22,5 @@ It also display the skills of the student and the projects he/she has done.
 ## Design
 
 ![design](./design.png)
+
+PS: on arrete de copier les loulous de 42 ;)
