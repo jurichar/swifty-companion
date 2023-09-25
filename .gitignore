@@ -16,3 +16,5 @@ DerivedData
 *.xccheckout
 *.pbxproj
 Breakpoints_v2.xcbkptlist
+/API/APIConstants.swift
+*/API/APIConstants.swift
