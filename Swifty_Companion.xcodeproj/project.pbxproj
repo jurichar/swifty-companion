@@ -17,7 +17,6 @@
 		8BA2A4A52A7FBBEC009594AF /* DetailedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BA2A4A42A7FBBEC009594AF /* DetailedView.swift */; };
 		8BA2A4AA2A7FE0AA009594AF /* APIConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BA2A4A92A7FE0AA009594AF /* APIConstants.swift */; };
 		8BA2A4AC2A7FE0F8009594AF /* APIManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BA2A4AB2A7FE0F8009594AF /* APIManager.swift */; };
-		8BA2A4B02A7FE21D009594AF /* config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BA2A4AF2A7FE21D009594AF /* config.swift */; };
 		8BA2A4B22A7FF637009594AF /* APIToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BA2A4B12A7FF637009594AF /* APIToken.swift */; };
 		8BA2A4B42A80116A009594AF /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BA2A4B32A80116A009594AF /* UserModel.swift */; };
 /* End PBXBuildFile section */
@@ -53,7 +52,6 @@
 		8BA2A4A42A7FBBEC009594AF /* DetailedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailedView.swift; sourceTree = "<group>"; };
 		8BA2A4A92A7FE0AA009594AF /* APIConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConstants.swift; sourceTree = "<group>"; };
 		8BA2A4AB2A7FE0F8009594AF /* APIManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIManager.swift; sourceTree = "<group>"; };
-		8BA2A4AF2A7FE21D009594AF /* config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = config.swift; sourceTree = "<group>"; };
 		8BA2A4B12A7FF637009594AF /* APIToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIToken.swift; sourceTree = "<group>"; };
 		8BA2A4B32A80116A009594AF /* UserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -104,7 +102,6 @@
 		8B8B56DD2A7D43D70051483A /* Swifty_Companion */ = {
 			isa = PBXGroup;
 			children = (
-				8BA2A4AF2A7FE21D009594AF /* config.swift */,
 				8BA2A4A82A7FE093009594AF /* API */,
 				8B8B56DE2A7D43D70051483A /* Swifty_CompanionApp.swift */,
 				8BA2A4A42A7FBBEC009594AF /* DetailedView.swift */,
@@ -273,7 +270,6 @@
 				8BA2A4AC2A7FE0F8009594AF /* APIManager.swift in Sources */,
 				8BA2A4B42A80116A009594AF /* UserModel.swift in Sources */,
 				8BA2A4AA2A7FE0AA009594AF /* APIConstants.swift in Sources */,
-				8BA2A4B02A7FE21D009594AF /* config.swift in Sources */,
 				8BA2A4A52A7FBBEC009594AF /* DetailedView.swift in Sources */,
 				8BA2A4B22A7FF637009594AF /* APIToken.swift in Sources */,
 				8B8B56DF2A7D43D70051483A /* Swifty_CompanionApp.swift in Sources */,
